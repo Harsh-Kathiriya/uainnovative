@@ -1,6 +1,5 @@
 const width = window.innerWidth / 1.5;
 const height = window.innerHeight / 1.5;
-
 const projection = d3.geoAlbersUsa()
     .scale(1300)
     .translate([width / 2, height / 2]);
@@ -128,7 +127,7 @@ d3.json("gz_2010_us_050_00_20m.json").then(function(geojson) {
             .force("x", d3.forceX().x(d => projection([d.longitude, d.latitude])[0]))
             .force("y", d3.forceY().y(d => projection([d.longitude, d.latitude])[1]))
             .force("collide", d3.forceCollide(5));
-
+        
         const facilities = g.selectAll("circle")
             .data(data)
             .enter()
@@ -144,6 +143,7 @@ d3.json("gz_2010_us_050_00_20m.json").then(function(geojson) {
                 } else {
                     return "black"; // Hospital
                 }
+
             })
             .on("mouseover", (event, d) => {
                 tooltip.html(`
@@ -180,6 +180,19 @@ d3.json("gz_2010_us_050_00_20m.json").then(function(geojson) {
                     <!-- Add other details here as needed -->
                 `);
                 facilityDetails.style("display", "block");
+                 // Calculate the coordinates of the clicked circle
+                 const [x, y] = projection([d.longitude, d.latitude]);
+                 // Define the scale for zooming
+                 const scale = 10; // You can adjust this value as needed
+ 
+                 // Apply zoom to the clicked location
+                 svg.transition()
+                     .duration(750)
+                     .call(zoom.transform, d3.zoomIdentity
+                         .translate(width / 2, height / 2) // Translate to the center of the SVG
+                         .scale(scale) // Apply the desired scale
+                         .translate(-x, -y) // Translate to the clicked location
+                     );
             });
 
         simulation.nodes(data).on("tick", () => {
@@ -189,7 +202,7 @@ d3.json("gz_2010_us_050_00_20m.json").then(function(geojson) {
         });
 
         const zoom = d3.zoom()
-            .scaleExtent([1, 10])
+            .scaleExtent([1, 200])
             .on("zoom", (event) => {
                 g.attr("transform", event.transform);
                 const zoomLevel = event.transform.k;
